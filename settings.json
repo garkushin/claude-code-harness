@@ -15,6 +15,9 @@
         "source": "github",
         "repo": "DietrichGebert/ponytail"
       }
-    }
+    },
+	"env": {
+    	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  	}
   }
 }
