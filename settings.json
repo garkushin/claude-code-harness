@@ -18,6 +18,11 @@
     },
 	"env": {
     	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  	}
+  	},
+	"sandbox": {
+    	"network": {
+      		"allowedDomains": ["api.stage.digital.kfc.ru", "api.stage.digital.uni.rest"]
+    	}
+	}
   }
 }
