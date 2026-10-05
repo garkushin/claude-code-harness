@@ -23,15 +23,20 @@
   `nuget-decompile`; живёт в `~/.dotnet/tools`, PATH не обязателен
 - Docker Desktop с MCP Toolkit — гейтвей `MCP_DOCKER`
 - [RoslynCSMCP](https://github.com/bbfox0703/RoslynCSMCP), склонированный локально
-  (например `~/projects/RoslynCSMCP`) — путь к клону зашит в `mcp/roslyn-nav.json`
+  (например `~/projects/RoslynCSMCP`) — путь к клону зашит в `mcp/roslyn-*.json`
   и правится под свою машину
 - Плагины `superpowers` и `ponytail` — маркетплейсы уже прописаны в
   `settings.json`, при первом запуске Claude Code доустановит сам
 
 ## Доступные MCP
 
-- **`roslyn-nav`** — символьная навигация по C#: ссылки, реализации, структура
-  проекта, аутлайн файла. Локальный stdio-сервер, поднимается через `dotnet run`
+- **`roslyn-nav`** — символьная навигация по C#: поиск символов, ссылки,
+  аутлайн файла. Модуль `Navigation` RoslynCSMCP
+- **`roslyn-quality`** — качество кода: запахи, сложность, конкурентность,
+  магические числа. Модуль `Quality` RoslynCSMCP
+
+Оба — локальные stdio-серверы, поднимаются через `dotnet run`.
+
 - **`MCP_DOCKER`** — гейтвей Docker MCP Toolkit, профиль `default`:
   - `context7` — документация библиотек по версии пакета
   - `fetch` — загрузка веб-страниц
@@ -44,18 +49,23 @@ profile server ls`.
 
 1. Склонируй репозиторий в `~/.claude` до первого запуска Claude Code.
 2. Поставь пререквизиты из списка выше.
-3. Поправь путь к клону RoslynCSMCP в `mcp/roslyn-nav.json`.
+3. Поправь путь к клону RoslynCSMCP в `mcp/roslyn-navigation.json` и
+   `mcp/roslyn-quality.json`.
 4. Зарегистрируй MCP-серверы (они хранятся в `~/.claude.json`, вне git):
 
 ```bash
-claude mcp add-json roslyn-nav --scope user "$(python3 -c "import json;print(json.dumps(json.load(open('$HOME/.claude/mcp/roslyn-nav.json'))['mcpServers']['roslyn-nav']))")"
+claude mcp add-json roslyn-nav --scope user "$(python3 -c "import json;print(json.dumps(json.load(open('$HOME/.claude/mcp/roslyn-navigation.json'))['mcpServers']['roslyn-nav']))")"
+```
+
+```bash
+claude mcp add-json roslyn-quality --scope user "$(python3 -c "import json;print(json.dumps(json.load(open('$HOME/.claude/mcp/roslyn-quality.json'))['mcpServers']['roslyn-quality']))")"
 ```
 
 ```bash
 claude mcp add MCP_DOCKER --scope user -- docker mcp gateway run --profile default
 ```
 
-5. Проверь: `claude mcp list` должен показать оба сервера.
+5. Проверь: `claude mcp list` должен показать все три сервера.
 
 ## Почему MCP не в репозитории
 
