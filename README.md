@@ -13,8 +13,10 @@
 - `agents/` — роли сабагентов: `analyst`, `researcher`, `architect`, `tech-writer`
   и пары тиров `developer-`, `reviewer-`, `verifier-` × `middle`/`senior`
 - `hooks/` — скрипты хуков; подключаются в `settings.json`
-- `output-styles/` — роль основной сессии; `Orchestrator` включается
-  командой `/output-style Orchestrator`
+- `output-styles/` — роль основной сессии. `/output-style Orchestrator` включает
+  `Orchestrator` в текущем проекте (пишет в его `.claude/settings.local.json`);
+  глобально — `"outputStyle": "Orchestrator"` в `settings.json`. Правку файла
+  стиля Claude Code подхватывает после перезапуска
 - `settings.json` — плагины, env, sandbox, хуки
 - `mcp/` — версионированные копии MCP-конфигов; харнес их отсюда НЕ читает,
   восстанавливай командой из раздела ниже

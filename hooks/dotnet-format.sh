@@ -4,6 +4,9 @@
 
 file=$(jq -r '.tool_input.file_path // empty')
 [[ "$file" == *.cs && -f "$file" ]] || exit 0
+# Через симлинк (/tmp → /private/tmp) cwd после cd и пути проекта расходятся,
+# и --include молча ничего не форматирует.
+file=$(realpath "$file")
 
 dir=$(dirname "$file")
 proj=""

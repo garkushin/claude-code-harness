@@ -9,6 +9,7 @@
 !/skills/
 # Скиллы аккаунта claude.ai: их пишет синхронизация, руками не правятся.
 /skills/synced/
+/skills/.trash/
 !/README.md
 !/mcp/
 
