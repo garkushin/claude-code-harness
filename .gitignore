@@ -17,6 +17,7 @@
 !/agents/
 !/commands/
 !/hooks/
+!/output-styles/
 !/keybindings.json
 
 # Локальные оверрайды и машинно-специфичное остаются вне репозитория:

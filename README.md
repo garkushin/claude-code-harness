@@ -12,6 +12,8 @@
   `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
 - `agents/` — сабагенты `opus-medium`, `opus-high`, `opus-xhigh`
 - `hooks/` — скрипты хуков; подключаются в `settings.json`
+- `output-styles/` — роль основной сессии; `Orchestrator` включается
+  командой `/output-style Orchestrator`
 - `settings.json` — плагины, env, sandbox, хуки
 - `mcp/` — версионированные копии MCP-конфигов; харнес их отсюда НЕ читает,
   восстанавливай командой из раздела ниже
