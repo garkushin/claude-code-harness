@@ -15,14 +15,28 @@
         "source": "github",
         "repo": "DietrichGebert/ponytail"
       }
-    },
-	"env": {
-    	"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  	},
-	"sandbox": {
-    	"network": {
-      		"allowedDomains": ["api.stage.digital.kfc.ru", "api.stage.digital.uni.rest"]
-    	}
-	}
+    }
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": ["api.stage.digital.kfc.ru", "api.stage.digital.uni.rest"]
+    }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/dotnet-format.sh\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
   }
 }

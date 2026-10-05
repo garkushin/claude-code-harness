@@ -5,11 +5,14 @@
 
 ## Состав
 
-- `CLAUDE.md` — роутер: только `@rules/*`-импорты, грузится в каждую сессию
 - `rules/` — always-on правила: комментарии, документация, инструменты,
-  стиль кода, тесты, модель сабагента, ревью
-- `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`, `graphify`
-- `settings.json` — плагины, effort, тема
+  стиль кода, тесты, модель сабагента, ревью. Claude Code грузит
+  `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны
+- `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`.
+  `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
+- `agents/` — сабагенты `opus-medium`, `opus-high`, `opus-xhigh`
+- `hooks/` — скрипты хуков; подключаются в `settings.json`
+- `settings.json` — плагины, env, sandbox, хуки
 - `mcp/` — версионированные копии MCP-конфигов; харнес их отсюда НЕ читает,
   восстанавливай командой из раздела ниже
 
