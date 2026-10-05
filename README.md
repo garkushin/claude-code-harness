@@ -17,7 +17,9 @@
   `Orchestrator` в текущем проекте (пишет в его `.claude/settings.local.json`);
   глобально — `"outputStyle": "Orchestrator"` в `settings.json`. Правку файла
   стиля Claude Code подхватывает после перезапуска
-- `settings.json` — плагины, env, sandbox, хуки
+- `settings.json` — разрешения (glab, push), плагины, sandbox, хуки, база worktree
+- Правки `rules/`, `agents/`, `output-styles/` проверяй `/doctor prompt-audit ~/.claude`:
+  ищет устаревшие и противоречащие друг другу инструкции
 - `mcp/` — версионированные копии MCP-конфигов; харнес их отсюда НЕ читает,
   восстанавливай командой из раздела ниже
 

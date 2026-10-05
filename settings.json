@@ -1,4 +1,26 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(glab mr view *)",
+      "Bash(glab mr list *)",
+      "Bash(glab mr diff *)",
+      "Bash(glab ci view *)",
+      "Bash(glab ci list *)",
+      "Bash(glab issue view *)",
+      "Bash(glab issue list *)"
+    ],
+    "ask": [
+      "Bash(glab mr approve *)",
+      "Bash(glab mr merge *)",
+      "Bash(glab mr note *)",
+      "Bash(glab mr create *)",
+      "Bash(glab mr update *)",
+      "Bash(glab ci run *)",
+      "Bash(glab api *)",
+      "Bash(git push *)"
+    ]
+  },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
     "ponytail@ponytail": true
@@ -38,5 +60,8 @@
         ]
       }
     ]
+  },
+  "worktree": {
+    "baseRef": "head"
   }
 }
