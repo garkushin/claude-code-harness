@@ -10,7 +10,8 @@
   `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны
 - `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`.
   `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
-- `agents/` — сабагенты `opus-medium`, `opus-high`, `opus-xhigh`
+- `agents/` — роли сабагентов: `analyst`, `researcher`, `architect`, `tech-writer`
+  и пары тиров `developer-`, `reviewer-`, `verifier-` × `middle`/`senior`
 - `hooks/` — скрипты хуков; подключаются в `settings.json`
 - `output-styles/` — роль основной сессии; `Orchestrator` включается
   командой `/output-style Orchestrator`
