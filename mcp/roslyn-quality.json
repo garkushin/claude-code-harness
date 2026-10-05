@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "roslyn-quality": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "-c",
+        "cd $HOME/projects/RoslynCSMCP/src/RoslynMcpServer.Quality && exec dotnet run --project ."
+      ],
+      "env": {}
+    }
+  }
+}
