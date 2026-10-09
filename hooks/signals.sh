@@ -12,8 +12,7 @@ sid=$(jq -r '.session_id // empty' <<<"$input")
 [[ $sid =~ ^[A-Za-z0-9_-]+$ ]] || exit 0
 [[ -e $dir/.skip-$sid ]] && exit 0
 
-# Регулярки jq (Oniguruma) падают на повторении больше 100000: только ограниченные {m,n},
-# а вставки режутся split по строкам-границам, без регулярки по содержимому.
+# Oniguruma отвергает {m,n} с границей больше 100000, и ошибка jq теряет строку журнала.
 line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
   def unpaste:
     reduce (split("\n")[]) as $l ({out: [], n: null};
@@ -24,10 +23,16 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
       else .n += ($l | length) + 1 end)
     | if .n == null then .out else .out + ["[вставка: \([.n, 0] | max) символов]"] end
     | join("\n");
-  def digits3: if (gsub("[^0-9]"; "") | length) >= 3 then "[секрет]" else . end;
+  def digits3: if ([explode[] | select(. >= 48 and . <= 57)] | length) >= 3 then "[секрет]" else . end;
+  # ponytail: match в jq 1.7.1 квадратичен по числу совпадений: 2 МБ случайного base64 — 200 с CPU; лечится маской только окна у границы обрезки.
   def mask:
-    gsub("(?<k>[A-Za-z0-9_.-]{0,64}(token|secret|password|passwd|key))(?<s>\\\\?\"?\\s{0,3}[=:]\\s{0,3})(?<q>\\\\?[\"\u0027]?)[^\\s\"\u0027\\\\,;]{1,512}"; "\(.k)\(.s)\(.q)[секрет]"; "i")
-    | gsub("(?<b>Bearer\\s{1,3})[A-Za-z0-9._~+/=-]{8,8192}"; "\(.b)[секрет]"; "i")
+    gsub("(gh[pousr]_[A-Za-z0-9]{20,255}|github_pat_[A-Za-z0-9_]{20,255}|sk-ant-[A-Za-z0-9_-]{8,512}|sk_(live|test)_[A-Za-z0-9]{8,255}|xox[bp]-[A-Za-z0-9-]{8,255})"; "[секрет]")
+    | gsub("(?<p>[A-Za-z][A-Za-z0-9+.-]{0,31}://[^\\s:/@]{1,256}:)[^\\s/@]{1,256}@"; "\(.p)[секрет]@")
+    | gsub("(?<p>(Bearer|Authorization:\\s{0,3}token)\\s{1,3})[A-Za-z0-9._~+/=-]{8,8192}"; "\(.p)[секрет]"; "i")
+    | gsub("(?<p>--(password|passwd|token)(\\s{1,3}|=)(\\\\?[\"\\x27])?)[^\\s\"\\x27\\\\,;]{1,512}"; "\(.p)[секрет]")
+    | gsub("(?<k>(?<![A-Za-z0-9])(([A-Za-z0-9]{1,32}[_-]){0,4}(?i:token|secret|password|passwd|key)|[A-Za-z][A-Za-z0-9]{0,32}(Token|Secret|Password|Passwd)|(?i:api|access|secret|private)(Key|key|KEY)))(?<s>\\\\?\"?\\s{0,3}[=:]\\s{0,3})((?<q>\\\\?[\"\\x27])[^\"\\x27\\\\\\n]{1,512}|(?<v>[^\\s\"\\x27\\\\,;]{1,512}))";
+        if .v != null and (.v | test("^[A-Za-z_][A-Za-z0-9_]{0,63}(\\.[A-Za-z_][A-Za-z0-9_]{0,63}){0,8}\\(")) then .k + .s + .v
+        else .k + .s + (.q // "") + "[секрет]" end)
     | gsub("(?<t>[A-Za-z0-9+=]{40,8192})"; .t | digits3)
     | gsub("(?<t>[0-9a-fA-F]{32,8192})"; .t | digits3);
   def head($n): if length > $n then .[:$n] + "[обрезано: \(length - $n)]" else . end;
@@ -70,17 +75,23 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
 
 file=$dir/$sid.jsonl
 lock=$file.lock
-# У async-хука нет таймаута: хук, убитый между mkdir и rmdir, оставит блокировку навсегда,
-# поэтому ждём ограниченно и считаем блокировку брошенной.
+# У async-хука нет таймаута: хук, убитый между mkdir и rmdir, оставил бы блокировку навсегда.
+# Её снимает тот, кто увидел мёртвого владельца или прождал одну и ту же блокировку 2 с.
+# ponytail: проверка владельца и снятие не атомарны, в окне в микросекунды два писателя могут совпасть.
 tries=0
+waited=0
+seen=
 until mkdir "$lock"; do
-  if ((++tries == 40)); then
-    rmdir "$lock"
-    mkdir "$lock" || exit 0
-    break
+  owner=$(cat "$lock/pid")
+  [[ $owner == "$seen" ]] || { seen=$owner; tries=0; }
+  if { [[ -n $owner ]] && ! kill -0 "$owner"; } || ((++tries > 40)); then
+    [[ $(cat "$lock/pid") == "$owner" ]] && { rm -f "$lock/pid"; rmdir "$lock"; }
+    tries=0
   fi
+  ((++waited > 400)) && exit 0
   sleep 0.05
 done
-trap 'rmdir "$lock"' EXIT
+echo $$ >"$lock/pid"
+trap 'rm -f "$lock/pid"; rmdir "$lock"' EXIT
 printf '%s\n' "$line" >>"$file"
 exit 0

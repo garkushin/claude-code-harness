@@ -85,16 +85,25 @@ expect "реплика с вставкой больше 100000 символов 
 
 # C6
 masks() {
-  prompt "$1"
-  expect "секрет $2 попал в журнал" "(.prompt|contains(\"$2\")|not) and (.prompt|contains(\"[секрет]\"))"
+  prompt "$2"
+  expect "$1" ".prompt==$3"
 }
-masks '"token=abc123SECRETvalue"' abc123SECRETvalue
-expect "маска стёрла имя ключа вместе со значением" '.prompt=="token=[секрет]"'
-masks '"password: \"hunter2pass\""' hunter2pass
-masks '"API_KEY=sk-live-0123456789abcdef"' sk-live-0123456789abcdef
-masks '"Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.e30.c2ln"' eyJhbGciOiJIUzI1NiJ9
-masks '"коммит 0123456789abcdef0123456789abcdef01234567"' 0123456789abcdef0123456789abcdef01234567
-masks '"dGhpcyBpcyBhIHNlY3JldCB0b2tlbiB2YWx1ZTEyMzQ1Njc4"' dGhpcyBpcyBhIHNlY3JldCB0b2tlbiB2YWx1ZTEyMzQ1Njc4
+masks "маска стёрла имя ключа или пропустила значение key=value" '"token=abc123SECRETvalue"' '"token=[секрет]"'
+masks "пароль в кавычках попал в журнал" '"password: \"hunter2pass\""' '"password: \"[секрет]\""'
+masks "ключ API попал в журнал" '"API_KEY=sk-live-0123456789abcdef"' '"API_KEY=[секрет]"'
+masks "токен Bearer попал в журнал" '"Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.e30.c2ln"' '"Authorization: Bearer [секрет]"'
+masks "токен Bearer после имени ключа попал в журнал" '"access_token: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.c2lnbmF0dXJl"' '"access_token: [секрет] [секрет]"'
+masks "значение ключа в JSON замаскировано не до закрывающей кавычки" '"{\"token\":\"Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.c2lnbmF0dXJl\"}"' '"{\"token\":\"[секрет]\"}"'
+masks "hex-хеш короче 40 символов попал в журнал" '"md5 d41d8cd98f00b204e9800998ecf8427e"' '"md5 [секрет]"'
+masks "base64-секрет попал в журнал" '"dGhpcyBpcyBhIHNlY3JldCB0b2tlbiB2YWx1ZTEyMzQ1Njc4"' '"[секрет]"'
+masks "токен GitHub ghp_ попал в журнал" '"вот токен gh''p_A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"' '"вот токен [секрет]"'
+masks "токен GitHub github_pat_ попал в журнал" '"github''_pat_11ABCDEFG0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456"' '"[секрет]"'
+masks "токен из заголовка Authorization: token попал в журнал" '"curl -H \"Authorization: token s3cr3tT0k3n\""' '"curl -H \"Authorization: token [секрет]\""'
+masks "пароль из URL попал в журнал" '"psql postgres://admin:S3cr3tPass@db.local:5432/app"' '"psql postgres://admin:[секрет]@db.local:5432/app"'
+masks "пароль или токен из флага командной строки попал в журнал" '"mysql -u root --password hunter2pass; gh --token abc123tok"' '"mysql -u root --password [секрет]; gh --token [секрет]"'
+masks "ключ Stripe попал в журнал" '"STRIPE=sk''_live_51HxYzAbCdEf0123 и sk''_test_4eC39HqLyjWDarjtT1zdp7dc"' '"STRIPE=[секрет] и [секрет]"'
+masks "токен Slack попал в журнал" '"xo''xb-1234567890-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx и xo''xp-9876543210-AbCdEf"' '"[секрет] и [секрет]"'
+masks "ключ Anthropic замаскирован не целиком" '"sk''-ant-api03-Xy9_Zz8-Ww7AbCdEfGhIjKlMn-0pQ"' '"[секрет]"'
 
 # C7
 kept() {
@@ -102,8 +111,11 @@ kept() {
   expect "маска испортила доказательство $1" ".prompt==$1"
 }
 kept '"/Users/vlad/Projects/uniRest/orderCheckoutService2/src/Handlers/x.cs:12"'
+kept '"/Users/vlad/Projects/pet2024/orderService3/src/Handlers/x.cs:12"'
 kept '"550e8400-e29b-41d4-a716-446655440000"'
 kept '"OrderCheckoutServiceRegistrationExtensionsV2"'
+kept '"PrimaryKey: OrderId"'
+kept '"var token = _issuer.Issue(user);"'
 
 # C8
 run "$(ev Stop '{last_assistant_message: "готово, token=abc123SECRETvalue", stop_hook_active: false}')"
@@ -171,18 +183,45 @@ rmdir "$log/s6.jsonl.lock"
 wait $pid
 check "запись потеряна после снятия блокировки" test "$(lines s6)" -eq 1
 
+finished() {
+  local i
+  for ((i = 0; i < $2; i++)); do kill -0 "$1" 2>/dev/null || break; sleep 0.1; done
+  if kill -0 "$1" 2>/dev/null; then
+    kill "$1"
+    wait "$1" 2>/dev/null
+    return 1
+  fi
+  wait "$1" 2>/dev/null
+}
+
 # C19
 mkdir "$log/s7.jsonl.lock"
 "$hook" <<<"$(ev Stop '{last_assistant_message: "x"}' s7)" &
-pid=$!
-for _ in {1..50}; do kill -0 $pid 2>/dev/null || break; sleep 0.1; done
-if kill -0 $pid 2>/dev/null; then
-  kill $pid
-  fail "хук бесконечно ждёт брошенную блокировку"
-fi
-wait $pid 2>/dev/null
+check "хук бесконечно ждёт брошенную блокировку" finished $! 50
 check "запись потеряна на брошенной блокировке" test "$(lines s7)" -eq 1
 check "блокировка не снята после записи" test ! -d "$log/s7.jsonl.lock"
+
+# C20
+mkdir "$log/s8.jsonl.lock"
+echo $$ >"$log/s8.jsonl.lock/pid"
+"$hook" <<<"$(ev Stop '{last_assistant_message: "x"}' s8)" &
+pid=$!
+sleep 1
+check "снята блокировка живого владельца" test "$(cat "$log/s8.jsonl.lock/pid" 2>/dev/null)" == $$
+check "запись прошла мимо блокировки живого владельца" test "$(lines s8)" -eq 0
+rm -f "$log/s8.jsonl.lock/pid"
+rmdir "$log/s8.jsonl.lock"
+wait $pid
+
+# C21
+true &
+dead=$!
+wait $dead
+mkdir "$log/s9.jsonl.lock"
+echo $dead >"$log/s9.jsonl.lock/pid"
+"$hook" <<<"$(ev Stop '{last_assistant_message: "x"}' s9)" &
+check "блокировка мёртвого владельца не снята сразу" finished $! 10
+check "запись потеряна на блокировке мёртвого владельца" test "$(lines s9)" -eq 1
 
 [[ $failed == 0 ]] || exit 1
 echo "OK: $checks"
