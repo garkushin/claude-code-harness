@@ -24,7 +24,6 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
     | if .n == null then .out else .out + ["[вставка: \([.n, 0] | max) символов]"] end
     | join("\n");
   def digits3: if ([explode[] | select(. >= 48 and . <= 57)] | length) >= 3 then "[секрет]" else . end;
-  # ponytail: match в jq 1.7.1 квадратичен по числу совпадений: 2 МБ случайного base64 — 200 с CPU; лечится маской только окна у границы обрезки.
   def mask:
     gsub("(gh[pousr]_[A-Za-z0-9]{20,255}|github_pat_[A-Za-z0-9_]{20,255}|sk-ant-[A-Za-z0-9_-]{8,512}|sk_(live|test)_[A-Za-z0-9]{8,255}|xox[bp]-[A-Za-z0-9-]{8,255})"; "[секрет]")
     | gsub("(?<p>[A-Za-z][A-Za-z0-9+.-]{0,31}://[^\\s:/@]{1,256}:)[^\\s/@]{1,256}@"; "\(.p)[секрет]@")
@@ -35,8 +34,10 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
         else .k + .s + (.q // "") + "[секрет]" end)
     | gsub("(?<t>[A-Za-z0-9+=]{40,8192})"; .t | digits3)
     | gsub("(?<t>[0-9a-fA-F]{32,8192})"; .t | digits3);
-  def head($n): if length > $n then .[:$n] + "[обрезано: \(length - $n)]" else . end;
-  def tail($n): if length > $n then "[обрезано: \(length - $n)]" + .[-$n:] else . end;
+  # match в jq 1.7.1 квадратичен по числу совпадений, поэтому маскируется только окно у лимита;
+  # запас в 256 символов нужен, чтобы секрет на границе обрезки не ушёл в журнал фрагментом.
+  def head($n): length as $len | .[:$n + 256] | mask | if $len > $n then .[:$n] + "[обрезано: \($len - $n)]" else . end;
+  def tail($n): length as $len | .[-($n + 256):] | mask | if $len > $n then "[обрезано: \($len - $n)]" + .[-$n:] else . end;
 
   {ts: (now | todate), session_id, prompt_id, agent_id, agent_type, project: $project, cwd, event: .hook_event_name} as $c
   | if .hook_event_name == "UserPromptExpansion" then
@@ -45,28 +46,28 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
       (.prompt // "") as $p
       | if $p | test("^/retro(\\s|$)") then "skip"
         else $c + {
-          prompt: ($p | unpaste | mask | head(4000)),
+          prompt: ($p | unpaste | head(4000)),
           origin: (if $p | startswith("<task-notification>") or startswith("Another Claude session sent a message:") then "harness" else "user" end)
         } end
     elif .hook_event_name == "Stop" then
-      $c + {last_assistant_message: (.last_assistant_message // "" | mask | tail(2000))}
+      $c + {last_assistant_message: (.last_assistant_message // "" | tail(2000))}
     elif .hook_event_name == "SubagentStop" then
       if (.agent_type // "") == "" then empty
-      else $c + {last_assistant_message: (.last_assistant_message // "" | mask | head(2000))} end
+      else $c + {last_assistant_message: (.last_assistant_message // "" | head(2000))} end
     elif .hook_event_name == "PermissionDenied" then
-      $c + {tool_name, tool_input: (.tool_input | tojson | mask | head(1000)), reason}
+      $c + {tool_name, tool_input: (.tool_input | tojson | head(1000)), reason}
     elif .hook_event_name == "PostToolUse" then
       $c + {tool_name} + (
         if .tool_name == "Agent" then
           {subagent_type: .tool_input.subagent_type, description: .tool_input.description,
-           prompt: (.tool_input.prompt // "" | mask | head(4000)), spawned_agent_id: .tool_response.agentId}
+           prompt: (.tool_input.prompt // "" | head(4000)), spawned_agent_id: .tool_response.agentId}
         elif .tool_name == "SendMessage" then
-          {tool_input: (.tool_input | tojson | mask | head(4000))}
+          {tool_input: (.tool_input | tojson | head(4000))}
         elif .tool_name == "AskUserQuestion" then
           {questions: (.tool_input.questions | walk(if type == "string" then mask else . end)),
-           tool_response: (.tool_response | if type == "string" then . else tojson end | mask | head(2000))}
+           tool_response: (.tool_response | if type == "string" then . else tojson end | head(2000))}
         elif .tool_name == "SubagentHandback" then
-          {message: (.tool_input.message // "" | mask | head(4000))}
+          {message: (.tool_input.message // "" | head(4000))}
         else empty end)
     else empty end
 ' <<<"$input") || exit 0

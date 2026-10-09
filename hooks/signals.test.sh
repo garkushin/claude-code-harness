@@ -131,6 +131,14 @@ expect "реплика ровно в лимит получила пометку 
 run "$(ev Stop '{last_assistant_message: ("A" * 500 + "B" * 2000), stop_hook_active: false}')"
 expect "из ответа ассистента сохранено не окончание" '.last_assistant_message == "[обрезано: 500]" + "B" * 2000'
 
+# C22
+sec=dGhpcyBpcyBhIHNlY3JldCB0b2tlbiB2YWx1ZTEyMzQ1Njc4
+nofrag="[range(0; $((${#sec} - 8))) as \$i | \"$sec\"[\$i:\$i + 9]] as \$f | tostring as \$l | all(\$f[]; . as \$x | \$l | contains(\$x) | not)"
+prompt "\"я\" * 3990 + \"$sec\" + \"я\" * 100"
+expect "фрагмент секрета на границе лимита реплики попал в журнал" "$nofrag"
+run "$(ev Stop "{last_assistant_message: (\"я\" * 100 + \"$sec\" + \"я\" * 1990)}")"
+expect "фрагмент секрета на границе лимита ответа ассистента попал в журнал" "$nofrag"
+
 # C11
 run "$(ev PostToolUse '{tool_name: "Agent", tool_input: {subagent_type: "analyst", description: "Факты", prompt: "бриф"}, tool_response: {status: "completed", agentId: "a4d2c8f1e0b3a297", content: [{type: "text", text: "ok"}]}, tool_use_id: "t1"}')"
 expect "бриф не связать со строками сабагента" '.tool_name=="Agent" and .subagent_type=="analyst" and .description=="Факты" and .prompt=="бриф" and .spawned_agent_id=="a4d2c8f1e0b3a297"'
