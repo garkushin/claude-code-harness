@@ -60,7 +60,7 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
     elif .hook_event_name == "PostToolUse" then
       $c + {tool_name} + (
         if .tool_name == "Agent" then
-          {subagent_type: .tool_input.subagent_type, description: .tool_input.description,
+          {subagent_type: .tool_input.subagent_type, description: (.tool_input.description | if type == "string" then mask else . end),
            prompt: (.tool_input.prompt // "" | head(4000)), spawned_agent_id: .tool_response.agentId}
         elif .tool_name == "SendMessage" then
           {tool_input: (.tool_input | tojson | head(4000))}

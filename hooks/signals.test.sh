@@ -160,6 +160,8 @@ expect "хвост длинного токена Bearer у начала окна
 # C11
 run "$(ev PostToolUse '{tool_name: "Agent", tool_input: {subagent_type: "analyst", description: "Факты", prompt: "бриф"}, tool_response: {status: "completed", agentId: "a4d2c8f1e0b3a297", content: [{type: "text", text: "ok"}]}, tool_use_id: "t1"}')"
 expect "бриф не связать со строками сабагента" '.tool_name=="Agent" and .subagent_type=="analyst" and .description=="Факты" and .prompt=="бриф" and .spawned_agent_id=="a4d2c8f1e0b3a297"'
+run "$(ev PostToolUse '{tool_name: "Agent", tool_input: {subagent_type: "analyst", description: "деплой token=abc123SECRETvalue", prompt: "бриф"}, tool_response: {agentId: "a5"}}')"
+expect "секрет в description вызова сабагента попал в журнал" '.description=="деплой token=[секрет]"'
 
 # C12
 run "$(ev PostToolUse '{tool_name: "SendMessage", tool_input: {to: "dev-a", message: "поправь X"}, tool_response: {}}')"
