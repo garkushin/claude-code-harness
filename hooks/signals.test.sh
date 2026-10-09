@@ -132,12 +132,30 @@ run "$(ev Stop '{last_assistant_message: ("A" * 500 + "B" * 2000), stop_hook_act
 expect "из ответа ассистента сохранено не окончание" '.last_assistant_message == "[обрезано: 500]" + "B" * 2000'
 
 # C22
+nofrag() { echo "[range(0; $((${#1} - 8))) as \$i | \"$1\"[\$i:\$i + 9]] as \$f | tostring as \$l | all(\$f[]; . as \$x | \$l | contains(\$x) | not)"; }
 sec=dGhpcyBpcyBhIHNlY3JldCB0b2tlbiB2YWx1ZTEyMzQ1Njc4
-nofrag="[range(0; $((${#sec} - 8))) as \$i | \"$sec\"[\$i:\$i + 9]] as \$f | tostring as \$l | all(\$f[]; . as \$x | \$l | contains(\$x) | not)"
 prompt "\"я\" * 3990 + \"$sec\" + \"я\" * 100"
-expect "фрагмент секрета на границе лимита реплики попал в журнал" "$nofrag"
+expect "фрагмент секрета на границе лимита реплики попал в журнал" "$(nofrag $sec)"
 run "$(ev Stop "{last_assistant_message: (\"я\" * 100 + \"$sec\" + \"я\" * 1990)}")"
-expect "фрагмент секрета на границе лимита ответа ассистента попал в журнал" "$nofrag"
+expect "фрагмент секрета на границе лимита ответа ассистента попал в журнал" "$(nofrag $sec)"
+
+rnd() {
+  jq -nr --argjson n "$1" --argjson seed "$2" --argjson m "$3" '"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" as $a
+    | [limit($n; foreach range($n) as $i ($seed; (. * 75 + 74) % 65537))] | map($a[. % $m:. % $m + 1]) | add'
+}
+b64=$(rnd 664 7 62)
+keys=""
+for ((i = 0; i < 6; i++)); do keys+=" ${b64:i*100:100}"; done
+sec=${b64:600:64}
+prompt "\"я\" * 3000 + \"$keys\" + \"я\" * 611 + \"$sec хвост\""
+expect "фрагмент секрета на краю окна реплики после сжатия ключей попал в журнал" "$(nofrag $sec)"
+sec=hunter2passWord9
+run "$(ev Stop "{last_assistant_message: (\"начало password=$sec$keys \" + \"я\" * 1635)}")"
+expect "значение ключа, разрезанное началом окна ответа ассистента, попало в журнал" "$(nofrag $sec)"
+jwt=$(rnd 1042 11 64)
+jwt=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.${jwt:0:700}.${jwt:700}
+run "$(ev Stop "{last_assistant_message: (\"Вот запрос: curl -H 'Authorization: Bearer $jwt' https://api/x\\n\" + \"я\" * 1900)}")"
+expect "хвост длинного токена Bearer у начала окна ответа ассистента попал в журнал" "$(nofrag $jwt)"
 
 # C11
 run "$(ev PostToolUse '{tool_name: "Agent", tool_input: {subagent_type: "analyst", description: "Факты", prompt: "бриф"}, tool_response: {status: "completed", agentId: "a4d2c8f1e0b3a297", content: [{type: "text", text: "ok"}]}, tool_use_id: "t1"}')"

@@ -35,9 +35,10 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
     | gsub("(?<t>[A-Za-z0-9+=]{40,8192})"; .t | digits3)
     | gsub("(?<t>[0-9a-fA-F]{32,8192})"; .t | digits3);
   # match в jq 1.7.1 квадратичен по числу совпадений, поэтому маскируется только окно у лимита;
-  # запас в 256 символов нужен, чтобы секрет на границе обрезки не ушёл в журнал фрагментом.
-  def head($n): length as $len | .[:$n + 256] | mask | if $len > $n then .[:$n] + "[обрезано: \($len - $n)]" else . end;
-  def tail($n): length as $len | .[-($n + 256):] | mask | if $len > $n then "[обрезано: \($len - $n)]" + .[-$n:] else . end;
+  # запас в 256 символов нужен, чтобы секрет на границе обрезки не ушёл в журнал фрагментом;
+  # обрывок слова у края окна отрезается или дописывается, иначе правило не узнает секрет без начала или без ключа.
+  def head($n): length as $len | .[:$n + 256] | (if $len > $n + 256 then sub("\\S{1,256}$"; "") else . end) | mask | if $len > $n then .[:$n] + "[обрезано: \($len - $n)]" else . end;
+  def tail($n): length as $len | (if $len > $n + 256 then (.[:$len - $n - 256] | .[-8256:] | capture("(?<w>[\\s\\S]{0,64}\\S{0,8192})$").w) else "" end) + .[-($n + 256):] | mask | if $len > $n then "[обрезано: \($len - $n)]" + .[-$n:] else . end;
 
   {ts: (now | todate), session_id, prompt_id, agent_id, agent_type, project: $project, cwd, event: .hook_event_name} as $c
   | if .hook_event_name == "UserPromptExpansion" then
