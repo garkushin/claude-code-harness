@@ -25,7 +25,7 @@ disable-model-invocation: true
 ```bash
 wm=$(cat ~/.claude/docs/retro/watermark 2>/dev/null)
 cat "${CLAUDE_SIGNALS_DIR:-$HOME/.claude/signals}"/*.jsonl 2>/dev/null | jq -nR --arg wm "$wm" '
-  ["UserPromptSubmit","Stop","SubagentStop","PermissionDenied","PostToolUse:Agent","PostToolUse:SendMessage","PostToolUse:AskUserQuestion"] as $expected
+  ["UserPromptSubmit","Stop","SubagentStop","PermissionDenied","PostToolUse:Agent","PostToolUse:SendMessage","PostToolUse:AskUserQuestion","PostToolUse:SubagentHandback"] as $expected
   | [inputs | fromjson? // {bad: true}] as $all
   | ($all | map(select(.bad | not))) as $ok
   | ($ok | map(select(.ts > $wm))) as $new
@@ -42,9 +42,9 @@ cat "${CLAUDE_SIGNALS_DIR:-$HOME/.claude/signals}"/*.jsonl 2>/dev/null | jq -nR 
      bad_lines: ($all | map(select(.bad)) | length)}'
 ```
 
-Предупреди о каждом событии с «нет записей» и об `age_days` больше 7: захват мог молча сломаться. Исключения: `PermissionDenied` бывает только в auto mode, поэтому его «нет записей» и старая дата нормальны вне него; `PostToolUse:AskUserQuestion` и `SendMessage` — только если эти инструменты использовались. `new_lines == 0` и в `candidates.md` нет записей — прогон закончен.
+Предупреди о каждом событии с «нет записей» и об `age_days` больше 7: захват мог молча сломаться. Исключения: `PermissionDenied` и `PostToolUse:SubagentHandback` бывают только в auto mode, поэтому их «нет записей» и старая дата нормальны вне него; `PostToolUse:AskUserQuestion` и `SendMessage` — только если эти инструменты использовались. `new_lines == 0` и в `candidates.md` нет записей — прогон закончен.
 
-`snapshot_max` — наибольший `ts` среди всех целых строк; он же станет `watermark`.
+`snapshot_max` — наибольший `ts` среди всех целых строк; он же станет `watermark`. Журнал пуст — `snapshot_max` равен `null`: прежний `watermark` сохраняется.
 
 ## Шаг 1a. Факты: `analyst`
 
@@ -141,14 +141,14 @@ Diff унифицированный, с префиксами `a/` и `b/`, пу�
 
 Исполнитель — `developer-middle`; среди правок есть хуки — `developer-senior`. Один исполнитель ведёт шаг до конца. В бриф входят: принятые предложения, ответы пользователя, отказы рецензентов с направлением, `snapshot_max`, раздел «Кандидаты». Основная сессия сама правки не применяет.
 
-1. Правки `~/.claude` применяются не в рабочем checkout, а в worktree: `git -C ~/.claude worktree add ~/.claude/.claude/worktrees/retro-<YYYY-MM-DD> -b retro-<YYYY-MM-DD>`.
+1. Правки `~/.claude` применяются не в рабочем checkout, а в worktree: `git -C ~/.claude worktree add ~/.claude/.claude/worktrees/retro-<YYYY-MM-DD-HHMM> -b retro-<YYYY-MM-DD-HHMM>`.
 2. Принятые diff накладываются по одному: `git -C <корень> apply --check`, затем `apply`; каждый следующий проверяется после предыдущего. Не наложился — вернуть `architect` на объединённый diff, один раунд; не наложился снова — предложение остаётся кандидатом, в `decisions.md` не пишется. Проектные правки — в корне `project`: в git-проекте только при чистом дереве, иначе «отложено» с причиной; `CLAUDE.local.md` — если его нет в `.gitignore` проекта, сообщи; коммит командных файлов проекта — только если пользователь выбрал вариант «…и закоммитить».
 3. `verifier-middle` проверяет в worktree: `jq . settings.json`; каждый изменённый хук — копия из worktree, по полю «Проверка» предложения; разбор frontmatter изменённых `agents/*.md` и `skills/*/SKILL.md`. Правка не прошла — возвращается исполнителю один раз; снова не прошла — «отложено», остальное идёт дальше.
 4. Исполнитель обновляет `docs/retro/` в worktree:
    - `decisions.md` — дата, цель, урок одной фразой своими словами, решение (`принято`, `отклонено`, `отложено`), кто (`пользователь` / `рецензент: <направление>`), причина, ссылки `путь:строка` без цитат. «Отложено» — не применено: на следующем прогоне оно не считается применённым и не блокирует повтор;
    - `candidates.md` — добавить «Кандидаты» прогона, убрать ставшие уроками и старше 60 дней;
-   - `watermark` — `snapshot_max`, не текущее время: строки, пришедшие во время прогона, остаются новыми.
-5. Коммит в ветке worktree одним коммитом `retro <YYYY-MM-DD>: <N> правок`; затем слияние в ветку основного checkout `~/.claude`: `git -C ~/.claude merge --ff-only retro-<YYYY-MM-DD>`. Не прошло — сообщи пользователю, ничего не откатывай; прошло — удалить worktree и ветку.
+   - `watermark` — `snapshot_max`, а при `null` прежний без изменений; не текущее время: строки, пришедшие во время прогона, остаются новыми.
+5. Коммит в ветке worktree одним коммитом `retro <YYYY-MM-DD>: <N> правок`; затем слияние в ветку основного checkout `~/.claude`: `git -C ~/.claude merge --ff-only retro-<YYYY-MM-DD-HHMM>`. Не прошло — сообщи пользователю, ничего не откатывай; прошло — удалить worktree и ветку.
 6. После слияния удалить записи `feedback` и их строки в `MEMORY.md` — только названные в принятых и применённых предложениях.
 
 ## Сбои
