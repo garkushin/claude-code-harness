@@ -21,32 +21,6 @@
       "Bash(git push *)"
     ]
   },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true,
-    "ponytail@ponytail": true
-  },
-  "extraKnownMarketplaces": {
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
-      }
-    },
-    "ponytail": {
-      "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
-      }
-    }
-  },
-  "sandbox": {
-    "network": {
-      "allowedDomains": [
-        "api.stage.digital.kfc.ru",
-        "api.stage.digital.uni.rest"
-      ]
-    }
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -129,5 +103,38 @@
   },
   "worktree": {
     "baseRef": "head"
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "ponytail@ponytail": true,
+    "diagram-design@diagram-design": true
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    },
+    "diagram-design": {
+      "source": {
+        "source": "github",
+        "repo": "cathrynlavery/diagram-design"
+      }
+    }
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": [
+        "api.stage.digital.kfc.ru",
+        "api.stage.digital.uni.rest"
+      ]
+    }
   }
 }
