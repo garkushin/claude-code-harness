@@ -8,11 +8,12 @@
 - `rules/` — always-on правила: комментарии, документация, инструменты,
   стиль кода, тесты, модель сабагента, ревью, спека. Claude Code грузит
   `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны
-- `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`.
+- `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`, `retro`.
   `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
 - `agents/` — роли сабагентов: `analyst`, `researcher`, `architect`, `tech-writer`
   и пары тиров `developer-`, `reviewer-`, `verifier-` × `middle`/`senior`
-- `hooks/` — скрипты хуков; подключаются в `settings.json`
+- `hooks/` — скрипты хуков; подключаются в `settings.json`. `signals.sh` пишет
+  журнал сигналов (раздел «Сигналы»)
 - `output-styles/` — роль основной сессии. `/output-style Orchestrator` включает
   `Orchestrator` в текущем проекте (пишет в его `.claude/settings.local.json`);
   глобально — `"outputStyle": "Orchestrator"` в `settings.json`. Правку файла
@@ -25,6 +26,7 @@
 
 ## Пререквизиты
 
+- `jq` — нужен хуку `hooks/signals.sh`
 - .NET SDK 10 — минимум для roslyn-nav и `ilspycmd`, оба таргетят `net10.0`
 - `ilspycmd` (`dotnet tool install -g ilspycmd`) — декомпиляция для скилла
   `nuget-decompile`; живёт в `~/.dotnet/tools`, PATH не обязателен
@@ -51,6 +53,36 @@
 
 Состав гейтвея меняется через Docker Desktop; текущий список — `docker mcp
 profile server ls`.
+
+## Сигналы
+
+Хук `hooks/signals.sh` пишет по строке JSON на событие в
+`~/.claude/signals/<session_id>.jsonl`: реплики, ответы, вызовы сабагентов,
+отказы в доступе. Секреты в записях маскируются.
+
+Каталог `signals/` вне git. Чтобы писать журнал в другое место, например в
+тесте, задай `CLAUDE_SIGNALS_DIR`.
+
+Тест хука: `hooks/signals.test.sh`.
+
+## Ретроспектива
+
+Каталог `docs/retro/` лежит в git:
+
+- `decisions.md` — решения по предложениям `/retro`
+- `candidates.md` — копилка разовых случаев между прогонами
+- `watermark` — метка последней обработанной строки журнала
+
+Каталоги прогонов `docs/tasks/<дата>-retro/` вне git.
+
+## Запуск /retro
+
+Чтобы превратить накопленные сигналы в правки правил, запусти `/retro` из
+`~/.claude`. Скилл разбирает журнал и предлагает правки, ты принимаешь решения.
+
+После прогона проверь правки: `/doctor prompt-audit ~/.claude`.
+
+Дизайн и обоснование: `docs/specs/2026-10-07-self-learning-design.md`.
 
 ## Восстановление на новой машине
 
