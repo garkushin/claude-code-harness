@@ -6,8 +6,10 @@
 !/CLAUDE.md
 !/settings.json
 !/rules/
-/skills/
-!/skills/synced/
+!/skills/
+# Скиллы аккаунта claude.ai: их пишет синхронизация, руками не правятся.
+/skills/synced/
+/skills/.trash/
 !/README.md
 !/mcp/
 
@@ -16,7 +18,10 @@
 !/agents/
 !/commands/
 !/hooks/
+!/output-styles/
 !/keybindings.json
+!/docs/
+/docs/tasks/
 
 # Локальные оверрайды и машинно-специфичное остаются вне репозитория:
 # settings.local.json, .credentials.json — под правилом /* выше.

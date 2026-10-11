@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "roslyn-nav": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "-c",
+        "cd $HOME/projects/RoslynCSMCP/src/RoslynMcpServer.Navigation && exec dotnet run --project ."
+      ],
+      "env": {}
+    }
+  }
+}
