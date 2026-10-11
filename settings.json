@@ -21,9 +21,93 @@
       "Bash(git push *)"
     ]
   },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/dotnet-format.sh\"",
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|SendMessage|AskUserQuestion|SubagentHandback",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "retro",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/signals.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "head"
+  },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "diagram-design@diagram-design": true
   },
   "extraKnownMarketplaces": {
     "superpowers-marketplace": {
@@ -37,6 +121,12 @@
         "source": "github",
         "repo": "DietrichGebert/ponytail"
       }
+    },
+    "diagram-design": {
+      "source": {
+        "source": "github",
+        "repo": "cathrynlavery/diagram-design"
+      }
     }
   },
   "sandbox": {
@@ -46,22 +136,5 @@
         "api.stage.digital.uni.rest"
       ]
     }
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$HOME/.claude/hooks/dotnet-format.sh\"",
-            "timeout": 60
-          }
-        ]
-      }
-    ]
-  },
-  "worktree": {
-    "baseRef": "head"
   }
 }

@@ -20,6 +20,8 @@
 !/hooks/
 !/output-styles/
 !/keybindings.json
+!/docs/
+/docs/tasks/
 
 # Локальные оверрайды и машинно-специфичное остаются вне репозитория:
 # settings.local.json, .credentials.json — под правилом /* выше.
