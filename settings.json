@@ -8,16 +8,16 @@
       "Bash(glab ci view *)",
       "Bash(glab ci list *)",
       "Bash(glab issue view *)",
-      "Bash(glab issue list *)"
+      "Bash(glab issue list *)",
+      "Bash(glab ci run *)",
+      "Bash(glab api *)",
+      "Bash(glab mr update *)",
+      "Bash(glab mr note *)",
     ],
     "ask": [
       "Bash(glab mr approve *)",
       "Bash(glab mr merge *)",
-      "Bash(glab mr note *)",
       "Bash(glab mr create *)",
-      "Bash(glab mr update *)",
-      "Bash(glab ci run *)",
-      "Bash(glab api *)",
       "Bash(git push *)"
     ]
   },
