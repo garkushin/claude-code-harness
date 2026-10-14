@@ -48,7 +48,7 @@ line=$(jq -c --arg project "$CLAUDE_PROJECT_DIR" '
       | if $p | test("^/retro(\\s|$)") then "skip"
         else $c + {
           prompt: ($p | unpaste | head(4000)),
-          origin: (if $p | startswith("<task-notification>") or startswith("Another Claude session sent a message:") then "harness" else "user" end)
+          origin: (if $p | test("^(<task-notification>|<agent-message |<cross-session-message |Another Claude session sent a message:)") then "harness" else "user" end)
         } end
     elif .hook_event_name == "Stop" then
       $c + {last_assistant_message: (.last_assistant_message // "" | tail(2000))}
