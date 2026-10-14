@@ -12,7 +12,7 @@
       "Bash(glab ci run *)",
       "Bash(glab api *)",
       "Bash(glab mr update *)",
-      "Bash(glab mr note *)",
+      "Bash(glab mr note *)"
     ],
     "ask": [
       "Bash(glab mr approve *)",
