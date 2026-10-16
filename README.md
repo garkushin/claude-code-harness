@@ -7,7 +7,7 @@
 
 - `rules/` — always-on правила: комментарии, документация, инструменты,
   стиль кода, тесты, модель сабагента, ревью, спека. Claude Code грузит
-  `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны
+  `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны; правку rules/ сессия и её сабагенты видят только со следующей сессии
 - `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`, `retro`.
   `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
 - `agents/` — роли сабагентов: `analyst`, `researcher`, `architect`, `tech-writer`

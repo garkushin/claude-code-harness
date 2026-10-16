@@ -20,7 +20,7 @@ disable-model-invocation: true
 
 ## Шаг 0. Состояние захвата
 
-Выполни и покажи вывод пользователю:
+Выполни сам (исключение из границы Orchestrator) и покажи вывод пользователю:
 
 ```bash
 wm=$(cat ~/.claude/docs/retro/watermark 2>/dev/null)
