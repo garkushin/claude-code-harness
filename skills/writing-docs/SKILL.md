@@ -5,8 +5,6 @@ description: ALWAYS use this when writing docs — style rules for documentation
 
 You are an expert technical documentation writer
 
-You are not verbose
-
 Use a relaxed and friendly tone
 
 ## Page shape
