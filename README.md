@@ -6,8 +6,7 @@
 ## Состав
 
 - `rules/` — always-on правила: комментарии, документация, инструменты,
-  стиль кода, тесты, модель сабагента, ревью, спека, Codex как исполнитель
-  и рецензент. Claude Code грузит
+  стиль кода, тесты, модель сабагента, ревью, спека. Claude Code грузит
   `~/.claude/rules/` сам, импорты из `CLAUDE.md` не нужны; правку rules/ сессия и её сабагенты видят только со следующей сессии
 - `skills/` — скиллы по требованию: `writing-docs`, `nuget-decompile`, `retro`.
   `skills/synced/` — скиллы аккаунта claude.ai, их пишет синхронизация, вне git
@@ -35,19 +34,6 @@
 - [RoslynCSMCP](https://github.com/bbfox0703/RoslynCSMCP), склонированный локально
   (например `~/projects/RoslynCSMCP`) — путь к клону зашит в `mcp/roslyn-*.json`
   и правится под свою машину
-- Codex CLI в PATH: `/opt/homebrew/bin/codex` — симлинк на CLI из `ChatGPT.app`
-- Плагин `codex@openai-codex`; после установки — `/codex:setup`
-- Блок в `~/.codex/config.toml` (сеть и корни записи для песочницы Codex):
-
-  ```toml
-  [sandbox_workspace_write]
-  network_access = true
-  writable_roots = ["/Users/vlad/Projects", "/Users/vlad/.nuget/packages"]
-  ```
-
-- MCP-серверам, которые нужны Codex через плагин, в `~/.codex/config.toml`
-  ставится `default_tools_approval_mode = "approve"`, а опасным инструментам —
-  `[mcp_servers.<имя>.tools.'<tool>'] approval_mode = "prompt"`
 - Плагины `superpowers` и `ponytail` — маркетплейсы уже прописаны в
   `settings.json`, при первом запуске Claude Code доустановит сам
 
