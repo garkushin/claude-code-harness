@@ -6,21 +6,21 @@
   "inferenceModels": [
     {
       "name": "cc/claude-sonnet-5-5",
-      "labelOverride": "Claude Sonnet 5.5",
+      "labelOverride": "sonnet 5.5",
       "anthropicFamilyTier": "sonnet",
       "maxEffort": "xhigh",
       "behavesAs": "claude-sonnet-5-5"
     },
     {
       "name": "cc/claude-opus-5-5",
-      "labelOverride": "Claude Opus 5.5",
+      "labelOverride": "opus 5.5",
       "anthropicFamilyTier": "opus",
       "maxEffort": "max",
       "behavesAs": "claude-opus-5-5"
     },
     {
       "name": "cc/claude-haiku-5-5",
-      "labelOverride": "Claude Haiku 5.5",
+      "labelOverride": "haiku 5.5",
       "anthropicFamilyTier": "haiku",
       "maxEffort": "max",
       "behavesAs": "claude-haiku-5-5"
