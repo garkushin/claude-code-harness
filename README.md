@@ -21,6 +21,7 @@
 - `settings.json` — разрешения (glab, push), плагины, sandbox, хуки, база worktree
 - Правки `rules/`, `agents/`, `output-styles/` проверяй `/doctor prompt-audit ~/.claude`:
   ищет устаревшие и противоречащие друг другу инструкции
+- `profiles/` — [профиль OmniRoute для Claude Desktop](profiles/README.md) без API-ключа
 - `mcp/` — версионированные копии MCP-конфигов; харнес их отсюда НЕ читает,
   восстанавливай командой из раздела ниже
 

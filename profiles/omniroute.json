@@ -1,0 +1,26 @@
+{
+  "inferenceGatewayBaseUrl": "https://omni.sdfghq.duckdns.org",
+  "modelDiscoveryEnabled": false,
+  "inferenceProvider": "gateway",
+  "inferenceCredentialKind": "static",
+  "inferenceModels": [
+    {
+      "name": "cc/claude-sonnet-5-5",
+      "labelOverride": "Claude Sonnet 5.5",
+      "anthropicFamilyTier": "sonnet",
+      "maxEffort": "xhigh"
+    },
+    {
+      "name": "cc/claude-opus-5-5",
+      "labelOverride": "Claude Opus 5.5",
+      "anthropicFamilyTier": "opus",
+      "maxEffort": "max"
+    },
+    {
+      "name": "cc/claude-haiku-5-5",
+      "labelOverride": "Claude Haiku 5.5",
+      "anthropicFamilyTier": "haiku",
+      "maxEffort": "max"
+    }
+  ]
+}
