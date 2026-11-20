@@ -27,10 +27,3 @@
 # settings.local.json, .credentials.json — под правилом /* выше.
 
 .DS_Store
-
-# Шаблоны профилей Claude Desktop без ключей.
-!/profiles/
-/profiles/*
-!/profiles/omniroute.json
-!/profiles/apply-omniroute.py
-!/profiles/README.md
